@@ -1,20 +1,12 @@
 function SE = functioncomputeUplinkSE_OSLP(H_hat,R_tilde,tau_c,tau_p,numRealz,K,L,N,allocatedPowUEs)
-%This function computes achievable SE of a radio stripes network with
-%OSLP algorithm based receiver
+%This function computes achievable SE of a radio stripes network with OSLP algorithm based receiver
+%%This function was developed as a part of the paper:
 %
-%This function was developed as a part of the paper:
-%
-%Zakir Hussain Shaik, Emil Bjornson, and Erik G. Larsson,
-%"MMSE-Optimal Sequential Processing for Cell-Free Massive MIMO With Radio
-%Stripes," IEEE Transactions on Communications, To appear.
-%
-%Download article: https://arxiv.org/pdf/2012.13928.pdf
-%
-%License: This code is licensed under the GPLv2 license. If you in any way
-%use this code for research that results in publications, please cite our
+%Zakir Hussain Shaik, Emil Bjornson, and Erik G. Larsson, "MMSE-Optimal Sequential Processing for Cell-Free Massive MIMO With Radio
+%Stripes," IEEE Transactions on Communications, To appear.Download article: https://arxiv.org/pdf/2012.13928.pdf
+%License: This code is licensed under the GPLv2 license. If you in any way use this code for research that results in publications, please cite our
 %paper as described above.
-%
-%INPUT:
+%% INPUT:
 %Hhat                   = Matrix with dimension L*N x K x numRealz where
 %                         (:,k,n) is the estimated collective channel to UE k at
 %                          channel realization n.
@@ -28,13 +20,9 @@ function SE = functioncomputeUplinkSE_OSLP(H_hat,R_tilde,tau_c,tau_p,numRealz,K,
 %L                      = Number of APs for the Radio-Stripe Network
 %N                      = Number of antennas per AP
 %allocated powers       = Power allocated to UEs, K x 1 vector
-%
-%OUTPUT:
+%%OUTPUT:
 %SE                     = Spectral Efficiency vector of K UEs.
-%
-%Generates SE data (K x 1) vector where SE(k) is achievable SE of UE k
-%with OSLP prcoessing
-
+%Generates SE data (K x 1) vector where SE(k) is achievable SE of UE k with OSLP prcoessing
 
 % Variable to store the final result
 SE = zeros(K,1);
@@ -79,12 +67,10 @@ for iRealz = 1:numRealz
         P = (eye(K) - T*Hhat)*P; % Eq. (30)
         
         %Storing Sigma2 Variable
-        Sigma2 = blkdiag(Sigma2,Sigma);
-        
+        Sigma2 = blkdiag(Sigma2,Sigma);        
     end
     
-    for k = 1:K
-        
+    for k = 1:K        
         hk_hat = H_hat(:,k,iRealz); % UE k estimate channel vector in eq. (23)
         vk     = V(k,:)'; % UE k combining vector in eq. (23) (note: bk = vk)
         
@@ -93,10 +79,8 @@ for iRealz = 1:numRealz
         sinr_denom = vk'*(H_hat(:,:,iRealz)*diag(allocatedPowUEs)*H_hat(:,:,iRealz)')*vk - sinr_numer + vk'*Sigma2*vk;
         
         % Sum rate over all realizations
-        SE(k,1) = SE(k,1) + log2(1 + real(sinr_numer/sinr_denom) );
-        
-    end
-    
+        SE(k,1) = SE(k,1) + log2(1 + real(sinr_numer/sinr_denom) );        
+    end    
 end
 
 SE = (1 - tau_p/tau_c)*SE/numRealz; % Average rate

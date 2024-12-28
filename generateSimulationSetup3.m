@@ -1,12 +1,9 @@
 function [gainOverNoisedB,R,pilotIndex,APpositions,UEpositions,distance_bw_UEs_APs] = generateSimulationSetup3(L,K,N,paramValues,chDist,shadowFlag)
-%Generate realizations of the simulation setup described in:
-%
-%Zakir Hussain Shaik, Emil Bjornson, and Erik G. Larsson,
-%"MMSE-Optimal Sequential Processing for Cell-Free Massive MIMO With Radio
-%Stripes," IEEE Transactions on Communications, To appear.
-%
+%This Matlab script generates the data required to plot SE for all different uplink receiver types in Figure 4a.
+%This script was developed as a part of the paper:
+%[1] Zakir Hussain Shaik, Emil Bjornson, and Erik G. Larsson,"MMSE-Optimal Sequential Processing for Cell-Free Massive MIMO With Radio
+%Stripes," IEEE Transactions on Communications, To appear. %Download article: https://arxiv.org/pdf/2012.13928.pdf
 %Download article: https://arxiv.org/pdf/2012.13928.pdf
-%
 %License: This code is licensed under the GPLv2 license. If you in any way
 %use this code for research that results in publications, please cite our
 %paper as described above.
@@ -21,17 +18,12 @@ function [gainOverNoisedB,R,pilotIndex,APpositions,UEpositions,distance_bw_UEs_A
 %                     where (:,:,k,l) is the spatial correlation matrix
 %                     between AP l and UE k, normalized by noise
 %                     power
-%pilotIndex         = Matrix with dimension K x 1 containing the
-%                     pilot assigned to the UEs for a given setup
-%gainOverNoisedB    = Matrix with dimension K x L where
-%                     element (k,l) is the channel gain (normalized by
+%pilotIndex              = Matrix with dimension K x 1 containing the pilot assigned to the UEs for a given setup
+%gainOverNoisedB = Matrix with dimension K x L where element (k,l) is the channel gain (normalized by
 %                     the noise power) between AP l and UE k
-%UEpositions        = Vector of length K with UE positions, where the real
-%                     part is the horizontal position and the imaginary
+%UEpositions         = Vector of length K with UE positions, where the real part is the horizontal position and the imaginary
 %                     part is the vertical position
-%APpositions        = Vector of length L with the AP locations, measured in
-%                     the same way as UEpositions
-
+%APpositions        = Vector of length L with the AP locations, measured in the same way as UEpositions
 
 %% Define simulation setup
 % For reference, Parameters indexing is as below
@@ -55,11 +47,9 @@ B = paramValues{1};
 
 %Noise figure (in dB)
 noiseFigure = paramValues{2};
-
 %Compute noise power:
 %noiseVariancedB = -204 + 10*log10(B) + noiseFigure
 noiseVariancedBm = -174 + 10*log10(B) + noiseFigure;
-
 %Length of the coherence block
 %tau_c = paramValues{3};
 
@@ -70,7 +60,7 @@ tau_p = paramValues{4};
 %pow_UE = paramValues{5};
 
 %Pathloss parameters
-alpha = paramValues{6}; % Pathloss exponent
+alpha = paramValues{6};              % Pathloss exponent
 constantTerm = paramValues{7}; % Median channel gain at a reference distance of 1Km in (dB)
 
 %Standard deviation of the shadow fading
@@ -89,7 +79,7 @@ antennaSpacing =  paramValues{11};%Half wavelength distance
 ASDdeg =  paramValues{12};
 
 %Size of the coverage area (as a square with wrap-around)
-radioStripeLength = paramValues{13}; %meter
+radioStripeLength = paramValues{13};  %meter
 
 %Per side length of the setup, it can be greater than radio stripe length/4
 perSideLength = radioStripeLength/4;
@@ -124,8 +114,6 @@ APpositions(3*perSideLength<APLocations) = ((4*perSideLength) - APpositions(3*pe
 APpositions(end) = [];
 
 APpositions = APpositions.';
-
-
 %% Deploy UEs on the grid randomly
 %Random UE locations with uniform distribution
 UEpositions = (0.1 + (0.9-0.1).*rand(K,1))*perSideLength + 1i*((0.1 + (0.9-0.1).*rand(K,1))* perSideLength) ;
@@ -165,58 +153,33 @@ gainOverNoisedB = constantTerm - alpha*10*log10(distance_bw_UEs_APs) - noiseVari
 
 if shadowFlag==1
     % Add shadow fading to all channels from APs to UE k that have a distance larger than 50 meters
-    gainOverNoisedB(distance_bw_UEs_APs>50) = gainOverNoisedB(distance_bw_UEs_APs>50) + f(distance_bw_UEs_APs>50);
-    
+    gainOverNoisedB(distance_bw_UEs_APs>50) = gainOverNoisedB(distance_bw_UEs_APs>50) + f(distance_bw_UEs_APs>50);  
 end
-
-
 % Nominal Angle between UEs to APs
 nAngle_bw_UEs_APs = angle(distance_bw_UEs_APs_inPlane0);
-
 for k = 1:K
-    for l = 1:L
-        
-        if strcmp(chDist,'uncorrelated')
-            
-            correlationMatrix = eye(N);
-            
+    for l = 1:L        
+        if strcmp(chDist,'uncorrelated')            
+            correlationMatrix = eye(N);            
         else
             correlationMatrix = functionRlocalscattering(N,nAngle_bw_UEs_APs(k,l),ASDdeg,antennaSpacing,chDist);
-        end
-        
-        R(:,:,k,l) = db2pow(gainOverNoisedB(k,l))*correlationMatrix;
-        
-    end
-    
+        end        
+        R(:,:,k,l) = db2pow(gainOverNoisedB(k,l))*correlationMatrix;        
+    end    
     %Generate pilot indexing
-    %Determine the best AP for UE k by looking for AP with best
-    %channel condition
-    [~,bestAP] = max(gainOverNoisedB(k,:));
-    
-    if k <= tau_p
-        
-        pilotIndex(k) = k;
-        
-    else %Assign pilot for remaining UEs
-        
+    %Determine the best AP for UE k by looking for AP with best channel condition
+    [~,bestAP] = max(gainOverNoisedB(k,:));    
+    if k <= tau_p        
+        pilotIndex(k) = k;        
+    else %Assign pilot for remaining UEs        
         %Compute received power from to the master AP from each pilot
-        pilotinterference = zeros(tau_p,1);
-        
-        for t = 1:tau_p
-            
-            pilotinterference(t) = sum(db2pow(gainOverNoisedB(pilotIndex(1:k-1,1)==t,bestAP)));
-            
-        end
-        
+        pilotinterference = zeros(tau_p,1);        
+        for t = 1:tau_p            
+            pilotinterference(t) = sum(db2pow(gainOverNoisedB(pilotIndex(1:k-1,1)==t,bestAP)));            
+        end        
         %Find the pilot with the least receiver power
         [~,bestpilot] = min(pilotinterference);
-        pilotIndex(k,1) = bestpilot;
-        
-    end
-    
-    
+        pilotIndex(k,1) = bestpilot;        
+    end    
 end
-
-
-
 end

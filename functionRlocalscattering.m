@@ -68,38 +68,25 @@ for column = 1:M
         F = @(Delta)exp(1i*2*pi*distance*sin(theta+Delta)).*exp(-Delta.^2/(2*ASD^2))/(sqrt(2*pi)*ASD);
         
         %Compute the integral in (2.23) by including 20 standard deviations
-        firstRow(column) = integral(F,-20*ASD,20*ASD);
-        
-        
+        firstRow(column) = integral(F,-20*ASD,20*ASD);    
     %For uniform angular distribution
-    elseif strcmp(distribution,'Uniform')
-        
+    elseif strcmp(distribution,'Uniform')        
         %Set the upper and lower limit of the uniform distribution
-        limits = sqrt(3)*ASD;
-        
+        limits = sqrt(3)*ASD;        
         %Define integrand of (2.23)
-        F = @(Delta)exp(1i*2*pi*distance*sin(theta+Delta))/(2*limits);
-        
+        F = @(Delta)exp(1i*2*pi*distance*sin(theta+Delta))/(2*limits);        
         %Compute the integral in (2.23) over the entire interval
-        firstRow(column) = integral(F,-limits,limits);
-        
-        
+        firstRow(column) = integral(F,-limits,limits);                
     %For Laplace angular distribution
-    elseif strcmp(distribution,'Laplace')
-        
+    elseif strcmp(distribution,'Laplace')        
         %Set the scale parameter of the Laplace distribution
-        LaplaceScale = ASD/sqrt(2);
-        
+        LaplaceScale = ASD/sqrt(2);        
         %Define integrand of (2.23)
-        F = @(Delta)exp(1i*2*pi*distance*sin(theta+Delta)).*exp(-abs(Delta)/LaplaceScale)/(2*LaplaceScale);
-        
+        F = @(Delta)exp(1i*2*pi*distance*sin(theta+Delta)).*exp(-abs(Delta)/LaplaceScale)/(2*LaplaceScale);        
         %Compute the integral in (2.23) by including 20 standard deviations
-        firstRow(column) = integral(F,-20*ASD,20*ASD);
-        
-    end
-    
+        firstRow(column) = integral(F,-20*ASD,20*ASD);        
+    end    
 end
-
 %Compute the spatial correlation matrix by utilizing the Toeplitz structure
 R = toeplitz(firstRow);
 end
